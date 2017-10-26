@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import json
 import logging
 import math
@@ -12,7 +13,6 @@ import dothat.touch as touch
 import requests
 
 
-RPC_ENDPOINT = 'http://localhost:6680/mopidy/rpc'
 logging.basicConfig(level=logging.DEBUG)
 LOG = logging.getLogger()
 
@@ -43,55 +43,61 @@ class Control(object):
     def __init__(self):
         pass
 
+    def _parse_track(self, track_info):
+        """
+        Attempt to parse the json output of the modipy rpc track object.
+        """
+        result = track_info.get('result')
+        main_artist = result.get('artists', [{'name': 'Unknown Aritst'}])[0].get('name')
+        title = result.get('name', 'Unknown Title')
+        return main_artist, title
+
+    @property
+    def current_track(self):
+        return self._parse_track(current_track())
+
+    @property
+    def artist(self):
+        artist, _ = self.current_track()
+        return artist
+
+    @property
+    def title(self):
+        _, title = self.current_track()
+        return title
 
     @touch.on(touch.RIGHT)
     def next_track(self):
         LOG.debug('TOUCHED RIGHT!!!!!!!!!!!!!!!')
-        get_next_track()
+        next_track()
+
+    @touch.on(touch.LEFT)
+    def next_track(self):
+        LOG.debug('TOUCHED LEFT!!!!!!!!!!!!!!!')
+        previous_track()
 
 
-class RPCInterface(object):
-    """
-    Handle RPC communication.
-    """
+JSON_PAYLOAD = {
+    'jsonrpc': '2.0',
+    'id': '1',
+}
+JSON_ENDPOINT = 'http://localhost:6680/mopidy/rpc'
 
+def current_track():
+    return _rpc_call()
 
-def get_track():
-    """
-    Call get_current_track rpc endpoint.
-    """
-    payload = {
-        'jsonrpc': '2.0',
-        'id': '1',
-        'method': 'core.playback.get_current_track'
-    }
-    r = requests.post(RPC_ENDPOINT, data=json.dumps(payload))
+def next_track():
+    return _rpc_call(method='core.playback.next')
+
+def previous_track():
+    return _rpc_call(method='core.playback.previous')
+
+def _rpc_call(method='core.playback.get_current_track'):
+    payload = copy.deepcopy(JSON_PAYLOAD)
+    payload['method'] = method
+    r = requests.post(JSON_ENDPOINT, data=json.dumps(payload))
     r.raise_for_status()
     return r.json()
-
-
-def get_next_track():
-    """
-    Call next_track rpc endpoint.
-    """
-    payload = {
-        'jsonrpc': '2.0',
-        'id': '1',
-        'method': 'core.playback.next'
-    }
-    r = requests.post(RPC_ENDPOINT, data=json.dumps(payload))
-    r.raise_for_status()
-    return r.json()
-
-
-def parse_track(track_info):
-    """
-    Attempt to parse the json output of the modipy rpc track object.
-    """
-    result = track_info.get('result')
-    main_artist = result.get('artists', [{'name': 'Unknown Aritst'}])[0].get('name')
-    title = result.get('name', 'Unknown Title')
-    return main_artist, title
 
 
 def main():
@@ -99,7 +105,7 @@ def main():
     controls = Control()
     x = 0
     while True:
-        artist, title = parse_track(get_track())
+        artist, title = controls.current_track
         LOG.debug('Aritst: {}\nTitle: {}\nX: {}'.format(artist, title, x))
 
         lcd_screen.random_color(x)
