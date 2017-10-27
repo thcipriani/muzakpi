@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block body %}
+<p>
+Bookmark  this page, click <code>Edit...</code> to edit the bookmark, and copy
+the text below into the URL field
+</p>
+<textarea style="width: 100%; height: 200px;">
+javascript:location.href='{{ request.url_root }}download?page='+encodeURIComponent(location.href)
+</textarea>
+{% endblock %}

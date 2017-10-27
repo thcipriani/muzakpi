@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block body %}
+<form id="youtube-form" method="post" action="getAndTag">
+<p>
+<label for="artist">Arist</label>
+<input type=text name=artist id=artist placeholder="Aritst (e.g., Led Zepplin)">
+</p>
+<p>
+<label for="title">Title</label>
+<input type=text name=title id=title placeholder="Title (e.g., Stairway to Heaven)">
+</p>
+<p>
+<label for="url">URL</label>
+{% if page %}
+<input name=url id=url value="{{ page }}" type=text placeholder="url (e.g., https://www.youtube.com/watch?v=123456)">
+{% else %}
+<input name=url id=url type=text placeholder="url (e.g., https://www.youtube.com/watch?v=123456)">
+{% endif %}
+</p>
+<p>
+<input id=submit type=submit>
+<div id=loader>
+<div class="la-ball-spin la-2x"> <div></div> <div></div> <div></div> <div></div> <div></div> <div></div> <div></div> <div></div> </div>
+<p class="loading-text">Loading...</p>
+</div>
+</p>
+</form>
+<script>
+$(function() {
+  console.log('here');
+  $('#youtube-form').on('submit', function() {
+    console.log('there');
+    $('#submit').prop('disabled', true).css({'display': 'none'});
+    $('#loader').css({'display': 'block'});
+  });
+});
+</script>
+{% endblock %}
