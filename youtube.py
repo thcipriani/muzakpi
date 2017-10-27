@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
 
 from flask import Flask, request
 app = Flask('Youtuber')
+
+HOME = os.path.join('/home', 'pi')
 
 @app.route('/bookmarklet')
 def bookmarklet():
@@ -65,10 +68,16 @@ def get_and_tag():
     artist = request.form['artist']
     url = request.form['url']
 
-    file_name = '/home/pi/Music/{}_{}.mp3'.format(artist, title)
+    file_name = os.path.join(
+        HOME,
+        'Music',
+        '{} - {}.%(ext)s'.format(artist, title)
+    )
+
+    final_file = filename % {ext: 'mp3'}
 
     subprocess.check_call(['youtube-dl', '--extract-audio', '--audio-format', 'mp3', url, '--output', file_name])
-    subprocess.check_call(['id3tag', '--artist={}'.format(artist), '--song={}'.format(title), file_name])
+    subprocess.check_call(['id3tag', '--artist={}'.format(artist), '--song={}'.format(title), final_file])
     subprocess.check_call(['sudo', 'mopidyctl', 'local', 'scan'])
     return "OK..."
 
