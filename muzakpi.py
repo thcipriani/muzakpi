@@ -136,8 +136,10 @@ def is_playing():
 def _rpc_call(method='core.playback.get_current_track'):
     payload = copy.deepcopy(JSON_PAYLOAD)
     payload['method'] = method
-    r = requests.post(JSON_ENDPOINT, data=json.dumps(payload))
-    r.raise_for_status()
+    try:
+        r = requests.post(JSON_ENDPOINT, data=json.dumps(payload))
+    except requests.exceptions.ConnectionError:
+        return {}
     return r.json()
 
 
